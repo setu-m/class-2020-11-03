@@ -104,6 +104,8 @@ poverty:
 distance: you would multiple the distance beta value by the distance and add it to the intercept value to get the reg_chg for that point
 pop_density
 
+this only works when it is a line; 
+
 
 
 ## Scene 3
