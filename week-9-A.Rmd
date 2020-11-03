@@ -42,13 +42,40 @@ week_9 <- kenya %>%
 
 * Make a scatter plot of `poverty` on the y-axis and `distance` in the x-axis. Include a `geom_smooth()` with `method` set to "lm" and `se` equal to FALSE. Write a sentence to answer these questions:
 
+```{r}
+week_9 %>%
+  ggplot(aes(distance, poverty)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+```
+
+
   + Does poverty cause distance? Or does distance cause poverty? Or both? Or neither?
+  
+not a causation, correlation
+
   + How accurate is the model beyond 90 kilometers?  
+  
+not as accurate, because there aren't many data points
+  
   + Eye-balling the chart, how different is the poverty rate between two polling stations whose distance differs by 50 kilometers?
+  
+.48 poverty -.4 = .8 difference, 80% dif
+  
   
 * Fit a `stan_glm()` model which relates poverty to distance. Print a summary. (Hint: In order to see the coefficient of `distance`, you will probably need to use the `digits` argument to `print()`.) Interpret the meaning of the two important parameters.  
 
+```{r}
+fit_model <- stan_glm(poverty ~ distance,
+                      data = week_9,
+                      refresh = 0)
 
+print(fit_model, digit = 4)
+```
+intercept median is the average median of the posterior prob distribution of poverty when distance = 0
+
+
+distance value* km value and add to control to get poverty level per difference
 
 
 
@@ -58,7 +85,24 @@ week_9 <- kenya %>%
 
 * Provide the math for this model.
 
+$$ reg\_chg_i = \beta_{int} + \beta_1 x_{treated,i} + \beta_2 x_{poverty,i} + \beta_3 x_{distance,i} + \beta_4 x_{pop\_density,i} + \epsilon_i$$
+i = observation
+
 * Estimate the model. Assign the fitted model to `fit_2`. Interpret the important parameters of the model.
+
+```{r}
+fit_2 <- stan_glm(data = week_9,
+                  reg_chg ~ treatment + poverty + distance + pop_density,
+                  refresh = 0)
+
+print(fit_2, digit = 6)
+
+```
+intercept: reg_chg is when the predictors are 0
+treatmentlocal: to get the reg_chg values you would just add treatmentlocal to intercept
+poverty: 
+distance: you would multiple the distance beta value by the distance and add it to the intercept value to get the reg_chg for that point
+pop_density
 
 
 
@@ -66,7 +110,19 @@ week_9 <- kenya %>%
 
 **Prompt:** Let's consider a different model. First, create a new variable, `poverty_n`, which is just `poverty` minus the mean of `poverty` then divided by the standard deviation of `poverty`. The "n" is for "normalization."  Second, consider `reg_chg` as a function of `treatment`, `poverty_n` and the interaction between the two.
 
+```{r}
+week_9 <- week_9 %>% mutate(poverty_n = (poverty - mean(poverty))/sd(poverty))
+```
+
+
 * Fit the  model and interpret the coefficients. Focus on the coefficient of the interaction term.
+
+```{r}
+fit_3 <- stan_glm(reg_chg ~ treatment + poverty_n,
+                  data = week_9,
+                  refresh = 0)
+```
+
 
 * Create a graphic of the posterior probability distribution of the causal effect of `local` treatment in polling stations which have +2 sigma poverty rates. Note that there are two ways to do this. First, we can use a parameter approach. This is what we did in class last week. Second, we can use `posterior_epred()`, which if generally easier since it does the math for us. Confirm that the two approaches give the same answer.
 
